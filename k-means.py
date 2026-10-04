@@ -76,7 +76,7 @@ dims = pixels.shape
 labels = np.zeros((dims[0], dims[1]), dtype=int)
 new_pixels = np.zeros_like(pixels)
 
-
+min=0
 for i in range (0,dims[0]):
     for j in range (0,dims[1]):
         d=np.linalg.norm(pixels[[i,j]] - centres_base[0])
@@ -84,8 +84,9 @@ for i in range (0,dims[0]):
             distance = np.linalg.norm(pixels[[i,j]] - centres_base[k])
             if distance<=d:
                 d=distance
-                new_centres[k].append(pixels[i,j])
-                labels[i,j]=k
+                min=k
+        new_centres[k].append(pixels[i,j])
+        labels[i,j]=k
 
 
 for k in range(len(new_centres)):

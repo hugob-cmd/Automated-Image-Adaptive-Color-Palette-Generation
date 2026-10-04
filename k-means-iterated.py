@@ -23,22 +23,22 @@ image= Image.open("Poivrons.jpeg")
 image.show()
 pixels=np.array(image)
 
-print(pixels[0,0])
-'''centres_base = [
-    [0, 0, 0],
-    [255, 255, 255],
-    [255, 0, 0],
-    [0, 255, 0],
-    [0, 0, 255],
-    [255, 255, 0],
-    [0, 255, 255],
-    [255, 0, 255],
-    [128, 128, 128],
-    [255, 128, 0],
-    [128, 0, 128],
-    [0, 128, 128]
+'''
+centres = [
+    [[0, 0, 0]],
+    [[255, 255, 255]],
+    [[255, 0, 0]],
+    [[0, 255, 0]],
+    [[0, 0, 255]],
+    [[255, 255, 0]],
+    [[0, 255, 255]],
+    [[255, 0, 255]],
+    [[128, 128, 128]],
+    [[255, 128, 0]],
+    [[128, 0, 128]],
+    [[0, 128, 128]]
     ]
-    '''
+'''
 #En prenant des pixels qui n'ont rien à voir ave l'image on se retroouve avec une image completement marron
 '''centres_base = [
     pixels[10,10],
@@ -55,53 +55,54 @@ print(pixels[0,0])
     pixels[250,250],
     ]
 '''
-centres_base = [
-    # Ligne du haut (Y = 85)
-    pixels[85, 64],
-    pixels[85, 192],
-    pixels[85, 320],
-    pixels[85, 448],
-    pixels[256, 64],
-    pixels[256, 192],
-    pixels[256, 320],
-    pixels[256, 448],
-    pixels[426, 64],
-    pixels[426, 192],
-    pixels[426, 320],
-    pixels[426, 448]
+
+centres=[
+    [pixels[85, 64]],
+    [pixels[85, 192]],
+    [pixels[85, 320]],
+    [pixels[85, 448]],
+    [pixels[256, 64]],
+    [pixels[256, 192]],
+    [pixels[256, 320]],
+    [pixels[256, 448]],
+    [pixels[426, 64]],
+    [pixels[426, 192]],
+    [pixels[426, 320]],
+    [pixels[426, 448]]
 ]
 
-new_centres=[[]for i in range (0,len(centres_base))]
-print(new_centres)
 
 dims = pixels.shape
 labels = np.zeros((dims[0], dims[1]), dtype=int)
 new_pixels = np.zeros_like(pixels)
+min=0
+iterations=0
+while iterations<12:
+    iterations+=1
+    print(f"iteration {iterations}")
+    for i in range (0,dims[0]):
+        for j in range (0,dims[1]):
+            d=np.linalg.norm(pixels[i,j] - centres[0])
+            for k in range(len(centres)) :
+                distance = np.linalg.norm(pixels[i,j] - centres[k])
+                if distance<=d:
+                    d=distance
+                    min=k
+            centres[min].append(pixels[i,j])
+            labels[i,j]=min
 
-
-for i in range (0,dims[0]):
-    for j in range (0,dims[1]):
-        d=np.linalg.norm(pixels[[i,j]] - centres_base[0])
-        for k in range(len(centres_base)) :
-            distance = np.linalg.norm(pixels[[i,j]] - centres_base[k])
-            if distance<=d:
-                d=distance
-                new_centres[k].append(pixels[i,j])
-                labels[i,j]=k
-
-
-for k in range(len(new_centres)):
-    if new_centres[k]!=[]:
-        a=np.mean(new_centres[k],axis=0)
-        print(a)
-        new_centres[k]=a
-    else:
-        print(f"Groupe {k} n'a aucun pixel associé")
+    for k in range(len(centres)):
+        if centres[k]!=[]:
+            a=np.mean(centres[k],axis=0)
+            print(a)
+            centres[k]=[a]
+        else:
+            print(f"Groupe {k} n'a aucun pixel associé")
 
 for i in range (0,dims[0]):
     for j in range (0,dims[1]):
         groupe=labels[i,j]
-        new_pixels[i,j]=new_centres[groupe]
+        new_pixels[i,j]=centres[groupe]
 
 new_pixels = new_pixels.astype(np.uint8)
 
