@@ -77,25 +77,26 @@ labels = np.zeros((dims[0], dims[1]), dtype=int)
 new_pixels = np.zeros_like(pixels)
 min=0
 iterations=0
+pool_centres=[[] for i in range (len(centres))]
 while iterations<12:
     iterations+=1
     print(f"iteration {iterations}")
     for i in range (0,dims[0]):
         for j in range (0,dims[1]):
-            d=np.linalg.norm(pixels[i,j] - centres[0])
+            d=np.linalg.norm(pixels[i,j] - centres[0][0])
             for k in range(len(centres)) :
-                distance = np.linalg.norm(pixels[i,j] - centres[k])
+                distance = np.linalg.norm(pixels[i,j] - centres[k][0])
                 if distance<=d:
                     d=distance
                     min=k
-            centres[min].append(pixels[i,j])
+            pool_centres[min].append(pixels[i,j])
             labels[i,j]=min
 
+
     for k in range(len(centres)):
-        if centres[k]!=[]:
-            a=np.mean(centres[k],axis=0)
-            print(a)
-            centres[k]=[a]
+        if centres[k] is not None:
+            a=np.mean(pool_centres[k],axis=0)
+            centres[k]=a
         else:
             print(f"Groupe {k} n'a aucun pixel associé")
 
