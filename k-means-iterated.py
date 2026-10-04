@@ -23,6 +23,7 @@ image= Image.open("Poivrons.jpeg")
 image.show()
 pixels=np.array(image)
 
+print(pixels[0,0])
 '''centres_base = [
     [0, 0, 0],
     [255, 255, 255],
@@ -71,6 +72,7 @@ centres_base = [
 ]
 
 new_centres=[[]for i in range (0,len(centres_base))]
+print(new_centres)
 
 dims = pixels.shape
 labels = np.zeros((dims[0], dims[1]), dtype=int)
@@ -100,12 +102,9 @@ for i in range (0,dims[0]):
     for j in range (0,dims[1]):
         groupe=labels[i,j]
         new_pixels[i,j]=new_centres[groupe]
-        
+
+new_pixels = new_pixels.astype(np.uint8)
 
 image_finale = Image.fromarray(new_pixels)
 image_finale.show()
-
-
-
-
 
