@@ -78,7 +78,7 @@ new_pixels = np.zeros_like(pixels)
 min=0
 iterations=0
 pool_centres=[[] for i in range (len(centres))]
-while iterations<12:
+while iterations<1:
     iterations+=1
     print(f"iteration {iterations}")
     for i in range (0,dims[0]):

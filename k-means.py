@@ -88,7 +88,6 @@ for i in range (0,dims[0]):
         new_centres[min].append(pixels[i,j])
         labels[i,j]=min
 
-
 for k in range(len(new_centres)):
     if new_centres[k]!=[]:
         a=np.mean(new_centres[k],axis=0)
