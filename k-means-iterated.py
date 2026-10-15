@@ -56,36 +56,35 @@ centres = [
     ]
 '''
 
-centres=[
-    [pixels[85, 64]],
-    [pixels[85, 192]],
-    [pixels[85, 320]],
-    [pixels[85, 448]],
-    [pixels[256, 64]],
-    [pixels[256, 192]],
-    [pixels[256, 320]],
-    [pixels[256, 448]],
-    [pixels[426, 64]],
-    [pixels[426, 192]],
-    [pixels[426, 320]],
-    [pixels[426, 448]]
+centres = [
+    pixels[85, 64],
+    pixels[85, 192],
+    pixels[85, 320],
+    pixels[85, 448],
+    pixels[256, 64],
+    pixels[256, 192],
+    pixels[256, 320],
+    pixels[256, 448],
+    pixels[426, 64],
+    pixels[426, 192],
+    pixels[426, 320],
+    pixels[426, 448]
 ]
-
 
 dims = pixels.shape
 labels = np.zeros((dims[0], dims[1]), dtype=int)
 new_pixels = np.zeros_like(pixels)
 min=0
 iterations=0
-pool_centres=[[] for i in range (len(centres))]
-while iterations<1:
+while iterations<12:
+    pool_centres=[[] for i in range (len(centres))]
     iterations+=1
     print(f"iteration {iterations}")
     for i in range (0,dims[0]):
         for j in range (0,dims[1]):
-            d=np.linalg.norm(pixels[i,j] - centres[0][0])
+            d=np.linalg.norm(pixels[i,j] - centres[0])
             for k in range(len(centres)) :
-                distance = np.linalg.norm(pixels[i,j] - centres[k][0])
+                distance = np.linalg.norm(pixels[i,j] - centres[k])
                 if distance<=d:
                     d=distance
                     min=k
@@ -94,9 +93,8 @@ while iterations<1:
 
 
     for k in range(len(centres)):
-        if centres[k] is not None:
-            a=np.mean(pool_centres[k],axis=0)
-            centres[k]=a
+        if len(pool_centres[k]) > 0:
+            centres[k] = np.mean(pool_centres[k], axis=0)
         else:
             print(f"Groupe {k} n'a aucun pixel associé")
 
