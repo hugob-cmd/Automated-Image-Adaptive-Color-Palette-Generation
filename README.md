@@ -26,7 +26,7 @@ Le rapport est le notebook **`rapport.ipynb`**, avec sa version PDF **`rapport.p
 | `demo_resultats.py` | Images finales et palettes des méthodes automatiques sur 5 photos (enregistrées dans `resultats/`) |
 | `complements.py` | Compléments de l'article : pixels de chaque mode (fig. 5), Mean-Shift, noms des couleurs (dictionnaires X11 et NBS/ISCC) |
 | `donnees/NBS-ISCC-rgb.txt` | Dictionnaire de noms de couleurs NBS/ISCC Centroids (J. Jaffer) |
-| `images/` | Images de test (`astronaut`, `coffee`, `chelsea` viennent de `scikit-image`) |
+| `images/` | Images de test (`astronaut`, `coffee`, `chelsea` viennent de `scikit-image` ; `coccinelle.png` est une capture de la figure 9 de l'article) |
 | `resultats/` | Images produites par les scripts (non versionnées) |
 
 Tous les scripts se lancent **depuis la racine du dépôt**, par exemple `python segmentation_auto.py`.
