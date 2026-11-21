@@ -1,4 +1,9 @@
-import importlib.util
+# --------------------------------------------------------------------------
+# Projet 4IM01 - Palette automatique de couleurs
+# Auteur : Hugo (binôme) - comparaison chiffrée des méthodes classiques.
+# Modifications (Claude, 21/11) : "median cut.py" renommé median_cut.py (import normal),
+# chemins images/ et resultats/.
+# --------------------------------------------------------------------------
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
@@ -12,14 +17,10 @@ from kmeans_rapide import centres_aleatoires, kmeans, image_depuis_labels
 # PSNR = 10 * log10(255² / MSE), en décibels -> plus c'est grand, mieux c'est
 # (au-dessus de ~30 dB on voit difficilement la différence à l'oeil)
 
-IMAGE = "Poivrons.jpeg"
+IMAGE = "images/Poivrons.jpeg"
 VALEURS_K = [2, 4, 8, 12, 16, 32, 64]
 
-# "median cut.py" a un espace dans son nom donc on ne peut pas écrire "import median cut"
-# -> on le charge à partir du nom du fichier
-spec = importlib.util.spec_from_file_location("median_cut", "median cut.py")
-median_cut_module = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(median_cut_module)
+import median_cut as median_cut_module
 
 
 def methode_popularite(pixels, K):
@@ -72,7 +73,7 @@ if __name__ == "__main__":
             print(f"   {nom:28s} MSE = {mse:8.1f}   PSNR = {psnr:5.2f} dB")
             # On garde l'image pour K = 8 pour pouvoir comparer à l'oeil
             if K == 8:
-                Image.fromarray(new_pixels).save(f"comparaison_k8_{nom.replace(' ', '_').replace('.', '')}.png")
+                Image.fromarray(new_pixels).save(f"resultats/comparaison_k8_{nom.replace(' ', '_').replace('.', '')}.png")
 
     # Courbes : PSNR en fonction de K pour chaque méthode
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4.5))
@@ -91,5 +92,5 @@ if __name__ == "__main__":
     ax2.legend()
     fig.suptitle(f"Erreur de quantification selon K ({IMAGE})")
     fig.tight_layout()
-    fig.savefig("comparaison_mse_psnr.png", dpi=130)
+    fig.savefig("resultats/comparaison_mse_psnr.png", dpi=130)
     plt.show()

@@ -1,9 +1,16 @@
+# --------------------------------------------------------------------------
+# Projet 4IM01 - Palette automatique de couleurs
+# Auteur : Hugo (binôme) - première version "heuristique" d'ACoPa (lissage + creux),
+# SANS le test statistique de l'article. Gardée comme point de comparaison.
+# Modifications (Claude, 21/11) : imports depuis segmentation_naive.py (ancien Segmentation.py)
+# et chemins images/ et resultats/.
+# --------------------------------------------------------------------------
 import numpy as np
 from PIL import Image
 from skimage.metrics import peak_signal_noise_ratio
 
-# On réutilise la conversion HSI et l'histogramme de teinte déjà écrits dans Segmentation.py
-from Segmentation import rgb_to_hsi, chromatic_mask
+# On réutilise la conversion HSI et le cylindre des gris écrits dans segmentation_naive.py
+from segmentation_naive import rgb_vers_hsi as rgb_to_hsi, pixels_colores as chromatic_mask
 from kmeans_rapide import kmeans, centres_aleatoires, image_depuis_labels
 
 # Version simplifiée d'ACoPa (article "Automatic color palette", Delon et al.)
@@ -13,7 +20,7 @@ from kmeans_rapide import kmeans, centres_aleatoires, image_depuis_labels
 # Simplification par rapport à l'article : on ne fait pas le test statistique "a contrario" (PAV + seuil)
 # on garde juste les pics bien séparés de l'histogramme lissé, et on ne redécoupe pas en saturation
 
-IMAGE = "Poivrons.jpeg"
+IMAGE = "images/Poivrons.jpeg"
 Q = 360           # nombre de classes de l'histogramme de teinte (1 classe = 1 degré)
 LISSAGE = 9       # largeur de la moyenne glissante (en classes) pour enlever le bruit de l'histogramme
 CREUX = 0.6       # deux bosses sont séparées si le creux entre elles descend sous 60 % de la plus petite
@@ -131,11 +138,11 @@ if __name__ == "__main__":
     print(centres_depart.round())
 
     # K-means initialisé avec les couleurs moyennes des bosses
-    centres, labels = kmeans(pixels, centres_depart)
+    centres, labels = kmeans(pixels, centres_depart, afficher=False)
     resultat = image_depuis_labels(centres, labels)
     image_finale = Image.fromarray(resultat)
     image_finale.show()
-    image_finale.save(f"Poivrons_acopa_simple_k{K}.png")
+    image_finale.save(f"resultats/Poivrons_acopa_simple_k{K}.png")
 
     # Pour comparer : K-means avec le même K mais des centres au hasard
     centres_h, labels_h = kmeans(pixels, centres_aleatoires(pixels, K), afficher=False)

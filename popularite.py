@@ -1,3 +1,8 @@
+# --------------------------------------------------------------------------
+# Projet 4IM01 - Palette automatique de couleurs
+# Auteur : Hugo (binôme) - algorithme de popularité.
+# Modification (Claude, 21/11) : chemin de l'image (images/), plus d'autre changement.
+# --------------------------------------------------------------------------
 import numpy as np
 from PIL import Image
 from kmeans_rapide import centre_le_plus_proche
@@ -47,7 +52,7 @@ def remplacer_par_palette(pixels, palette):
 
 
 if __name__ == "__main__":
-    image = Image.open("Poivrons.jpeg").convert("RGB")
+    image = Image.open("images/Poivrons.jpeg").convert("RGB")
     image.show()
     pixels = np.array(image)
 
@@ -58,7 +63,7 @@ if __name__ == "__main__":
     new_pixels = remplacer_par_palette(pixels, palette)
     image_finale = Image.fromarray(new_pixels)
     image_finale.show()
-    image_finale.save(f"Poivrons_popularite_k{K}.png")
+    image_finale.save(f"resultats/Poivrons_popularite_k{K}.png")
 
     # Remarque : les petites zones de couleur (un petit objet rouge par ex.) disparaissent
     # car leurs cases ne sont jamais dans les K plus remplies -> c'est le défaut connu de cette méthode

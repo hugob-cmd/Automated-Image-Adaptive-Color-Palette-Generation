@@ -1,3 +1,10 @@
+# --------------------------------------------------------------------------
+# Projet 4IM01 - Palette automatique de couleurs
+# Auteur : Hugo (binôme). Script d'apprentissage du début du projet, gardé tel quel
+# pour montrer notre démarche (K-means "à la main" avec une double boucle sur les pixels).
+# Seule modification (Claude, 21/11) : chemin de l'image -> images/Poivrons.jpeg
+# A lancer depuis la racine du dépôt : python apprentissage/k-means.py
+# --------------------------------------------------------------------------
 import numpy as np
 from PIL import Image
 
@@ -19,26 +26,25 @@ from PIL import Image
 #print(f"Le triplet RGB du premier pixel est : {premier_pixel}")
 # Résultat attendu : par exemple [255 128 0]
 
-image= Image.open("Poivrons.jpeg")
+image= Image.open("images/Poivrons.jpeg").convert("RGB")
 image.show()
 pixels=np.array(image)
 
-'''
-centres = [
-    [[0, 0, 0]],
-    [[255, 255, 255]],
-    [[255, 0, 0]],
-    [[0, 255, 0]],
-    [[0, 0, 255]],
-    [[255, 255, 0]],
-    [[0, 255, 255]],
-    [[255, 0, 255]],
-    [[128, 128, 128]],
-    [[255, 128, 0]],
-    [[128, 0, 128]],
-    [[0, 128, 128]]
+'''centres_base = [
+    [0, 0, 0],
+    [255, 255, 255],
+    [255, 0, 0],
+    [0, 255, 0],
+    [0, 0, 255],
+    [255, 255, 0],
+    [0, 255, 255],
+    [255, 0, 255],
+    [128, 128, 128],
+    [255, 128, 0],
+    [128, 0, 128],
+    [0, 128, 128]
     ]
-'''
+    '''
 #En prenant des pixels qui n'ont rien à voir ave l'image on se retroouve avec une image completement marron
 '''centres_base = [
     pixels[10,10],
@@ -55,8 +61,8 @@ centres = [
     pixels[250,250],
     ]
 '''
-
-centres = [
+centres_base = [
+    # Ligne du haut (Y = 85)
     pixels[85, 64],
     pixels[85, 192],
     pixels[85, 320],
@@ -71,40 +77,42 @@ centres = [
     pixels[426, 448]
 ]
 
+new_centres=[[]for i in range (0,len(centres_base))]
+
 dims = pixels.shape
 labels = np.zeros((dims[0], dims[1]), dtype=int)
 new_pixels = np.zeros_like(pixels)
+
 min=0
-iterations=0
-while iterations<12:
-    pool_centres=[[] for i in range (len(centres))]
-    iterations+=1
-    print(f"iteration {iterations}")
-    for i in range (0,dims[0]):
-        for j in range (0,dims[1]):
-            d=np.linalg.norm(pixels[i,j] - centres[0])
-            for k in range(len(centres)) :
-                distance = np.linalg.norm(pixels[i,j] - centres[k])
-                if distance<=d:
-                    d=distance
-                    min=k
-            pool_centres[min].append(pixels[i,j])
-            labels[i,j]=min
+for i in range (0,dims[0]):
+    for j in range (0,dims[1]):
+        d=np.linalg.norm(pixels[i,j] - centres_base[0])
+        for k in range(len(centres_base)) :
+            distance = np.linalg.norm(pixels[i,j] - centres_base[k])
+            if distance<=d:
+                d=distance
+                min=k
+        new_centres[min].append(pixels[i,j])
+        labels[i,j]=min
 
-
-    for k in range(len(centres)):
-        if len(pool_centres[k]) > 0:
-            centres[k] = np.mean(pool_centres[k], axis=0)
-        else:
-            print(f"Groupe {k} n'a aucun pixel associé")
+for k in range(len(new_centres)):
+    if new_centres[k]!=[]:
+        a=np.mean(new_centres[k],axis=0)
+        print(a)
+        new_centres[k]=a
+    else:
+        print(f"Groupe {k} n'a aucun pixel associé")
 
 for i in range (0,dims[0]):
     for j in range (0,dims[1]):
         groupe=labels[i,j]
-        new_pixels[i,j]=centres[groupe]
-
-new_pixels = new_pixels.astype(np.uint8)
+        new_pixels[i,j]=new_centres[groupe]
+        
 
 image_finale = Image.fromarray(new_pixels)
 image_finale.show()
+
+
+
+
 
