@@ -1,10 +1,3 @@
-# --------------------------------------------------------------------------
-# Projet 4IM01 - Palette automatique de couleurs
-# Auteur : Hugo (binôme) - première version "heuristique" d'ACoPa (lissage + creux),
-# SANS le test statistique de l'article. Gardée comme point de comparaison.
-# Modifications (Claude, 21/11) : imports depuis segmentation_naive.py (ancien Segmentation.py)
-# et chemins images/ et resultats/.
-# --------------------------------------------------------------------------
 import numpy as np
 from PIL import Image
 from skimage.metrics import peak_signal_noise_ratio
@@ -28,9 +21,6 @@ TAILLE_MIN = 0.01 # une bosse qui contient moins de 1 % des pixels est ignorée
 
 
 def lisser(h, largeur, circulaire):
-    # Moyenne glissante : chaque classe devient la moyenne de ses voisines
-    # Pour la teinte, l'histogramme est circulaire (359 degrés est à côté de 0 degré)
-    # donc on recopie les bords de l'autre côté avant de faire la moyenne
     noyau = np.ones(largeur) / largeur
     m = largeur // 2
     if circulaire:

@@ -1,21 +1,3 @@
-# --------------------------------------------------------------------------
-# Projet 4IM01 - Palette automatique de couleurs (article ACoPa, Delon et al. 2007)
-#
-# Qui a écrit ce fichier :
-#   Code écrit par Claude (agent conversationnel d'Anthropic) à partir de l'article
-#   et de la référence [10] (Delon, Desolneux, Lisani, Petro, "A nonparametric approach
-#   for histogram segmentation", IEEE TIP 2007), puis relu et testé par Aziz.
-#
-# VERSION AUTOMATIQUE de la segmentation :
-#   on garde tout ce qui est dans segmentation_naive.py (HSI, PAV, FTC, hiérarchie
-#   teinte -> saturation -> intensité) mais on remplace le seuil réglé à la main
-#   par le test statistique "a contrario" de l'article. Le seul paramètre est EPSILON,
-#   le nombre moyen de fausses détections qu'on accepte (EPSILON = 1 dans [10]).
-#   Ensuite les couleurs trouvées servent de centres de départ à K-means (annexe A),
-#   dans l'espace RGB ou dans l'espace CIE Lab.
-#
-# Lancer depuis la racine du dépôt : python segmentation_auto.py
-# --------------------------------------------------------------------------
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
@@ -30,12 +12,8 @@ IMAGE = "images/Poivrons.jpeg"
 EPSILON = 1.0   # nombre de fausses alarmes accepté (valeur de [10])
 
 
-# ==========================================================================
 # 1. Test a contrario : "h suit-il la loi p ?"
-# ==========================================================================
 def entropie_relative(r, p):
-    # H(r, p) = r log(r/p) + (1-r) log((1-r)/(1-p)), avec la convention 0 log 0 = 0
-    # C'est la "distance" entre une proportion observée r et une proportion attendue p.
     petit = 1e-12
     p = np.clip(p, petit, 1 - petit)
     terme1 = np.where(r > 0, r * np.log(np.maximum(r, petit) / p), 0)
@@ -44,15 +22,6 @@ def entropie_relative(r, p):
 
 
 def suit_la_loi(h, loi, L_total):
-    # h : histogramme observé (N pixels), loi : histogramme attendu (même masse N).
-    # Pour chaque intervalle [a, b], on compare la proportion observée r(a,b) à la
-    # proportion attendue p(a,b). Sous l'hypothèse "h suit la loi", le nombre de pixels
-    # dans [a, b] suit une loi binomiale B(N, p(a,b)). La probabilité d'observer un écart
-    # aussi grand est majorée par exp(-N H(r, p)) (borne de Hoeffding).
-    # On teste tous les intervalles, donc on multiplie par leur nombre L(L+1)/2 :
-    #     NFA([a,b]) = L(L+1)/2 * exp(-N H(r(a,b), p(a,b)))
-    # Si NFA < EPSILON pour au moins un intervalle, on rejette l'hypothèse.
-    # Autrement dit on rejette si   H(r, p) > log(L(L+1) / (2 EPSILON)) / N.
     N = h.sum()
     if N == 0:
         return True
@@ -67,12 +36,8 @@ def suit_la_loi(h, loi, L_total):
     return not np.any(H > seuil)
 
 
-# ==========================================================================
 # 2. Hypothèses croissante, décroissante, unimodale (définitions 1 et 2 de l'article)
-# ==========================================================================
 def suit_hypothese_croissante(h, L_total):
-    # h suit l'hypothèse croissante si le test accepte la loi donnée par son
-    # estimateur de Grenander croissant (calculé par PAV)
     return suit_la_loi(h, pav_croissant(h), L_total)
 
 
@@ -81,8 +46,6 @@ def suit_hypothese_decroissante(h, L_total):
 
 
 def fabrique_test_unimodal(L_total):
-    # On fabrique la fonction de test pour un histogramme de L_total classes
-    # (L_total sert dans le nombre d'intervalles testés)
     def est_unimodal_auto(h):
         h = np.asarray(h, dtype=np.float64)
         if len(h) < 3 or h.sum() == 0:
@@ -103,9 +66,7 @@ def fabrique_test_unimodal(L_total):
 est_unimodal_auto = fabrique_test_unimodal(360)
 
 
-# ==========================================================================
 # 3. K-means initialisé avec les graines d'ACoPa (annexe A), en RGB ou en Lab
-# ==========================================================================
 def acopa_kmeans(image, graines, espace="RGB"):
     # Renvoie l'image quantifiée et la palette finale (couleurs RGB moyennes des groupes)
     h, w, _ = image.shape

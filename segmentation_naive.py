@@ -1,20 +1,3 @@
-# --------------------------------------------------------------------------
-# Projet 4IM01 - Palette automatique de couleurs (article ACoPa, Delon et al. 2007)
-#
-# Qui a écrit ce fichier :
-#   Code écrit par Claude (agent conversationnel d'Anthropic) à partir de nos
-#   questions sur l'article, puis relu, testé et commenté par Aziz.
-#   Les premières fonctions (HSI, PAV) existaient déjà dans Segmentation.py.
-#
-# VERSION NAÏVE de la segmentation :
-#   - on suit l'algorithme de l'article (HSI, cylindre des gris, Pool Adjacent
-#     Violators, algorithme FTC, découpage teinte -> saturation -> intensité)
-#   - MAIS le test "ce morceau d'histogramme est-il unimodal ?" est remplacé par
-#     un seuil qu'on règle à la main : SEUIL
-#   La version avec le test statistique de l'article est dans segmentation_auto.py
-#
-# Lancer depuis la racine du dépôt : python segmentation_naive.py
-# --------------------------------------------------------------------------
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
@@ -22,22 +5,11 @@ from PIL import Image
 IMAGE = "images/Poivrons.jpeg"
 Q = 360        # nombre de classes de l'histogramme de teinte (1 classe = 1 degré)
 SEUIL = 0.05   # écart maximal toléré (en fraction des pixels du morceau) pour dire "unimodal"
-LARGEUR = 4    # largeur des classes des histogrammes de saturation et d'intensité
-               # (S va de 0 à environ 208, I de 0 à 255 ; l'article ne précise pas ce choix).
-               # Avec LARGEUR = 1, l'histogramme de saturation de Poivrons.jpeg est "en peigne"
-               # (valeurs RGB irrégulières dans l'image) et on trouve beaucoup trop de modes.
+LARGEUR = 4    # largeur des classes pour la saturation et l'intensité
 
 
-# ==========================================================================
 # 1. Passage de RGB à HSI
-# ==========================================================================
 def rgb_vers_hsi(image):
-    # Formules de l'article :
-    #   I = (R + G + B) / 3
-    #   S = distance du point (R, G, B) à l'axe des gris
-    #   H = angle autour de l'axe des gris
-    # L'article écrit H avec arccos, qui ne donne qu'un angle entre 0 et 180 degrés.
-    # On utilise arctan2 pour avoir le cercle entier (rouge = 0, vert = 120, bleu = 240).
     rgb = image.astype(np.float64)
     R, G, B = rgb[..., 0], rgb[..., 1], rgb[..., 2]
     I = (R + G + B) / 3
@@ -47,21 +19,11 @@ def rgb_vers_hsi(image):
 
 
 def pixels_colores(S, Q=Q):
-    # Cylindre des gris de l'article : à la distance S de l'axe des gris, il y a au plus
-    # 2*pi*S couleurs sur le cercle. Pour pouvoir découper la teinte en Q classes il faut
-    # donc S > Q / (2*pi) (= 57,3 pour Q = 360). En dessous, la teinte n'a pas de sens.
     return S > Q / (2 * np.pi)
 
 
-# ==========================================================================
 # 2. Pool Adjacent Violators (estimateur de Grenander)
-# ==========================================================================
 def pav_decroissant(h):
-    # Meilleure approximation décroissante de h.
-    # On parcourt h de gauche à droite avec une pile de "blocs" (valeur, taille).
-    # Si le dernier bloc est plus haut que celui d'avant, la décroissance est violée :
-    # on fusionne les deux blocs et on prend leur moyenne. On recommence tant qu'il le faut.
-    # Exemple : [5, 3, 4, 2] -> [5, 3.5, 3.5, 2]
     valeurs = []
     tailles = []
     for x in h:
@@ -83,24 +45,15 @@ def pav_croissant(h):
 
 
 def ajustement_unimodal(h, c):
-    # Approximation "croissant puis décroissant" de h autour du pic c :
-    # PAV croissant à gauche de c, PAV décroissant à partir de c
     return np.concatenate([pav_croissant(h[:c]), pav_decroissant(h[c:])])
 
 
 def pics_candidats(h, nb=3):
-    # Positions possibles du pic : les nb classes les plus hautes du morceau.
-    # (l'article demande seulement qu'il EXISTE un c qui marche ; tester tous les c
-    # serait trop long, et en pratique le bon c est près du maximum)
     return np.argsort(h)[::-1][:nb]
 
 
-# ==========================================================================
 # 3. Test d'unimodalité NAÏF (seuil réglé à la main)
-# ==========================================================================
 def ecart(h, ajustement):
-    # Fraction des pixels qu'il faut "déplacer" pour passer de h à son ajustement.
-    # On divise par 2 car chaque pixel déplacé compte deux fois (une classe perd, une gagne).
     N = h.sum()
     if N == 0:
         return 0
@@ -108,10 +61,6 @@ def ecart(h, ajustement):
 
 
 def est_unimodal_naif(h, seuil=SEUIL):
-    # h est unimodal si, pour au moins un pic c, l'écart à l'ajustement
-    # croissant-décroissant autour de c est plus petit que le seuil.
-    # Défaut connu : le seuil ne dépend pas du nombre de pixels N, alors qu'un petit
-    # écart sur 200 000 pixels est beaucoup plus "sûr" qu'un petit écart sur 50 pixels.
     h = np.asarray(h, dtype=np.float64)
     if len(h) < 3 or h.sum() == 0:
         return True
@@ -121,9 +70,7 @@ def est_unimodal_naif(h, seuil=SEUIL):
     return False
 
 
-# ==========================================================================
 # 4. Algorithme FTC (Fine To Coarse) de l'article
-# ==========================================================================
 def minima_locaux(h):
     # Indices des minima locaux de h (on prend le début et la fin des plateaux)
     m = []
@@ -134,15 +81,6 @@ def minima_locaux(h):
 
 
 def ftc(h, est_unimodal, graine=0):
-    # Entrée : histogramme h (L classes) et une fonction de test d'unimodalité.
-    # Sortie : liste des bornes [0, b1, b2, ..., L] ; le morceau k est h[bornes[k]:bornes[k+1]].
-    #
-    # 1. On part de la segmentation la plus fine : tous les minima locaux + les deux bouts.
-    # 2. On choisit au hasard deux morceaux voisins ; si leur union est unimodale, on les
-    #    fusionne. On recommence jusqu'à ce qu'aucune paire ne puisse être fusionnée.
-    # 3. Même chose avec des unions de j = 3, 4, ... morceaux voisins.
-    #    (petite différence avec l'article : après une fusion à j >= 3, on revient à j = 2,
-    #    pour être sûr que plus aucune union de morceaux voisins n'est unimodale)
     h = np.asarray(h, dtype=np.float64)
     L = len(h)
     bornes = [0] + minima_locaux(h) + [L]
@@ -172,25 +110,13 @@ def etiqueter(classes, bornes):
 
 
 def ftc_circulaire(h, est_unimodal):
-    # L'histogramme de teinte est circulaire (359 degrés est à côté de 0 degré).
-    # Astuce simple : on "coupe" le cercle à l'endroit où l'histogramme est le plus bas
-    # (il n'y a sûrement pas de mode à cet endroit), on fait tourner h pour que cette
-    # classe soit au début, et on applique le FTC normal.
     decalage = int(np.argmin(h))
     bornes = ftc(np.roll(h, -decalage), est_unimodal)
     return bornes, decalage
 
 
-# ==========================================================================
 # 5. Palette hiérarchique : teinte -> saturation -> intensité (algorithme ACoPa)
-# ==========================================================================
 def palette_acopa(image, est_unimodal, afficher=True, largeur=LARGEUR):
-    # Renvoie :
-    #   graines   : couleur moyenne (RGB) de chaque groupe final -> centres de départ de K-means
-    #   effectifs : nombre de pixels de chaque groupe
-    #   niveaux   : couleurs obtenues après la teinte, après la saturation, après l'intensité
-    #               (pour dessiner la "palette hiérarchique" comme la figure 4(e) de l'article)
-    #   infos     : histogramme de teinte et ses bornes (pour les figures)
     pixels = image.reshape(-1, 3).astype(np.float64)
     H, S, I = rgb_vers_hsi(image)
     H, S, I = H.ravel(), S.ravel(), I.ravel()
@@ -249,9 +175,7 @@ def palette_acopa(image, est_unimodal, afficher=True, largeur=LARGEUR):
     return np.array(graines), np.array(effectifs), niveaux, infos
 
 
-# ==========================================================================
 # 6. Affichages
-# ==========================================================================
 def afficher_segmentation_teinte(h_teinte, bornes, decalage, titre=""):
     # Histogramme de teinte en noir + bornes trouvées par le FTC en rouge
     plt.figure(figsize=(10, 3))

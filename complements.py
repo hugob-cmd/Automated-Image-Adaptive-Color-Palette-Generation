@@ -1,17 +1,3 @@
-# --------------------------------------------------------------------------
-# Projet 4IM01 - Palette automatique de couleurs (article ACoPa, Delon et al. 2007)
-# Qui a écrit ce fichier : Claude (agent conversationnel), à la demande d'Aziz,
-# pour compléter les parties de l'article qui manquaient.
-#
-# Trois compléments :
-#   1. Figure 5 de l'article : les pixels de l'image qui appartiennent à chaque mode
-#      (de teinte, puis de saturation, puis d'intensité)
-#   2. Mean-Shift, la 4e méthode de comparaison de l'article (section 6)
-#   3. Nommer les couleurs de la palette (section 5 de l'article) avec deux
-#      dictionnaires : X11 et NBS/ISCC Centroids
-#
-# Lancer depuis la racine du dépôt : python complements.py
-# --------------------------------------------------------------------------
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import CSS4_COLORS, to_rgb
@@ -24,14 +10,8 @@ import segmentation_auto as auto
 from kmeans_rapide import attribuer
 
 
-# ==========================================================================
 # 1. Pixels de chaque mode (figure 5 de l'article)
-# ==========================================================================
 def masques_des_modes(image, test=auto.est_unimodal_auto, largeur=naive.LARGEUR):
-    # Refait les étapes d'ACoPa en gardant les masques des pixels de chaque mode :
-    #   ligne 1 : un masque par mode de teinte (pixels colorés)
-    #   ligne 2 : un masque par mode de saturation, pour le plus gros mode de teinte
-    #   ligne 3 : un masque par mode d'intensité, pour le plus gros mode (teinte, saturation)
     H, S, I = naive.rgb_vers_hsi(image)
     H, S, I = H.ravel(), S.ravel(), I.ravel()
     Q = naive.Q
@@ -87,16 +67,8 @@ def afficher_pixels_des_modes(image, titre=""):
     return fig
 
 
-# ==========================================================================
 # 2. Mean-Shift (comparaison de la section 6 de l'article)
-# ==========================================================================
 def mean_shift(image, K_cible, espace="RGB", nb_echantillons=5000, graine=0):
-    # Mean-Shift cherche les maxima de la densité des couleurs ; le nombre de couleurs
-    # dépend de la "largeur de bande" (rayon de la fenêtre). Comme dans l'article, on règle
-    # ce paramètre pour obtenir à peu près le même nombre de couleurs K que ACoPa :
-    # on cherche la largeur de bande par dichotomie (plus elle est grande, moins il y a de couleurs).
-    # Pour aller vite, Mean-Shift est calculé sur 5000 pixels tirés au hasard, puis chaque
-    # pixel de l'image va vers le centre le plus proche.
     pixels = image.reshape(-1, 3).astype(np.float64)
     travail = rgb2lab(image / 255.0).reshape(-1, 3) if espace == "Lab" else pixels
     hasard = np.random.default_rng(graine)
@@ -124,9 +96,7 @@ def mean_shift(image, K_cible, espace="RGB", nb_echantillons=5000, graine=0):
     return finale, palette
 
 
-# ==========================================================================
 # 3. Nommer les couleurs (section 5 de l'article)
-# ==========================================================================
 def dictionnaire_nbs(chemin="donnees/NBS-ISCC-rgb.txt"):
     # Dictionnaire NBS/ISCC Centroids (267 noms), fichier de J. Jaffer
     noms, couleurs = [], []
@@ -140,17 +110,12 @@ def dictionnaire_nbs(chemin="donnees/NBS-ISCC-rgb.txt"):
 
 
 def dictionnaire_x11():
-    # Noms de couleurs X11 tels qu'ils sont repris dans CSS4 (148 noms, fournis par matplotlib).
-    # L'article utilise la liste X11 complète (450 noms), qu'on n'a pas pu télécharger.
     noms = sorted(CSS4_COLORS)
     couleurs = np.array([to_rgb(CSS4_COLORS[n]) for n in noms]) * 255
     return noms, couleurs
 
 
 def nommer_palette(palette, effectifs, dictionnaire):
-    # Chaque couleur de la palette reçoit le nom de la couleur du dictionnaire la plus proche,
-    # avec la distance euclidienne dans Lab (proche de la distance perçue).
-    # Les couleurs qui ont le même nom sont regroupées, et on trie par nombre de pixels.
     noms, couleurs = dictionnaire
     lab_palette = rgb2lab(np.array(palette)[None, :, :] / 255)[0]
     lab_dico = rgb2lab(couleurs[None, :, :] / 255)[0]

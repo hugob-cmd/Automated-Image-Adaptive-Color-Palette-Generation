@@ -1,16 +1,3 @@
-# --------------------------------------------------------------------------
-# Projet 4IM01 - Palette automatique de couleurs
-# Qui a écrit ce fichier : Claude (agent conversationnel), à la demande d'Aziz.
-#
-# Affiche l'image finale des méthodes AUTOMATIQUES sur plusieurs photos :
-#   - ACoPa version naïve (seuil réglé à la main) + K-means RGB
-#   - ACoPa version a contrario + K-means RGB
-#   - ACoPa version a contrario + K-means Lab
-# Sous chaque image, on dessine la palette trouvée (une case par couleur).
-# Les images finales sont aussi enregistrées dans resultats/.
-#
-# Lancer depuis la racine du dépôt : python demo_resultats.py
-# --------------------------------------------------------------------------
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image

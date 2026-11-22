@@ -1,8 +1,3 @@
-# --------------------------------------------------------------------------
-# Projet 4IM01 - Palette automatique de couleurs
-# Auteur : Hugo (binôme) - algorithme de popularité.
-# Modification (Claude, 21/11) : chemin de l'image (images/), plus d'autre changement.
-# --------------------------------------------------------------------------
 import numpy as np
 from PIL import Image
 from kmeans_rapide import centre_le_plus_proche
@@ -43,8 +38,6 @@ def popularite(pixels, K, bits=BITS):
 
 
 def remplacer_par_palette(pixels, palette):
-    # Chaque pixel prend la couleur de la palette la plus proche (distance euclidienne dans RGB)
-    # Même idée que la double boucle de k-means.py, mais calculée d'un coup avec NumPy
     liste_pixels = pixels.reshape(-1, 3).astype(np.float64)
     labels = centre_le_plus_proche(liste_pixels, palette)
     new_pixels = palette[labels].reshape(pixels.shape)

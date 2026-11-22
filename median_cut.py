@@ -1,9 +1,3 @@
-# --------------------------------------------------------------------------
-# Projet 4IM01 - Palette automatique de couleurs
-# Auteur : Aziz, avec l'aide de Claude (agent conversationnel) pour l'écriture du code.
-# Median cut (Heckbert 1982) : on coupe récursivement les boîtes de couleurs à la médiane.
-# Modification (Claude, 21/11) : chemin de l'image (images/) et sortie dans resultats/.
-# --------------------------------------------------------------------------
 import sys
 import numpy as np
 
